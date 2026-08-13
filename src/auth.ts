@@ -4,6 +4,10 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  // Required when self-hosting (i.e. not on Vercel) so Auth.js trusts the
+  // Host header of incoming requests. Safe here since this app is deployed
+  // behind our own reverse proxy / container, not accepting arbitrary hosts.
+  trustHost: true,
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
