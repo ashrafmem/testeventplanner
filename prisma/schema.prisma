@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  events       Event[]
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  subtitle    String?
+  tradition   String? // e.g. "Hindu wedding", "Christian wedding", "Birthday"
+  prompt      String // original AI prompt used to generate this event
+  location    String?
+  coverNote   String? // short welcome message shown to guests
+  startDate   DateTime?
+  endDate     DateTime?
+  hostId      String
+  host        User     @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  days        EventDay[]
+  rsvps       Rsvp[]
+}
+
+model EventDay {
+  id          String   @id @default(cuid())
+  eventId     String
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  order       Int
+  date        DateTime?
+  title       String // e.g. "Mehendi", "Sangeet", "Wedding Ceremony", "Reception"
+  description String?
+  items       EventItem[]
+}
+
+model EventItem {
+  id          String   @id @default(cuid())
+  dayId       String
+  day         EventDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  order       Int
+  time        String? // free text e.g. "5:00 PM"
+  title       String
+  location    String?
+  dressCode   String?
+  description String?
+}
+
+model Rsvp {
+  id           String   @id @default(cuid())
+  eventId      String
+  event        Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guestName    String
+  email        String?
+  phone        String?
+  status       String // "yes" | "no" | "maybe"
+  guestCount   Int      @default(1)
+  attendingDays String? // comma-separated EventDay ids the guest plans to attend
+  dietary      String?
+  message      String?
+  createdAt    DateTime @default(now())
+}
